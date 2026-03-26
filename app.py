@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 
+FASTAPI_URL = "https://claim-prediction-api.onrender.com/predict"
+
 st.set_page_config(page_title="Claim Prediction Dashboard", layout="wide")
 
 st.title("Claim Prediction Dashboard")
@@ -44,7 +46,7 @@ if section == "Prediction":
         )
         policy_term_months = st.number_input("Policy Term (Months)", min_value=1, max_value=24, value=12)
         gender = st.selectbox("Gender", ["Male", "Female"])
-        vehicle_type = st.selectbox("Vehicle Type", ["Commercial", "Private", "PSV", "Motorcycle","Other"])
+        vehicle_type = st.selectbox("Vehicle Type", ["Commercial", "Private", "PSV", "Motorcycle", "Other"])
 
     if st.button("Predict Claim Risk"):
         payload = {
@@ -65,9 +67,9 @@ if section == "Prediction":
 
         try:
             response = requests.post(
-                "http://127.0.0.1:8000/predict",
+                FASTAPI_URL,
                 json=payload,
-                timeout=15
+                timeout=30
             )
             response.raise_for_status()
             result = response.json()
@@ -75,7 +77,7 @@ if section == "Prediction":
             st.subheader("Prediction Result")
             st.success(result["label"])
 
-            if result["claim_probability"] is not None:
+            if result.get("claim_probability") is not None:
                 st.metric("Claim Probability", f"{result['claim_probability']:.2%}")
             else:
                 st.info("Probability not available for this model.")
@@ -84,13 +86,3 @@ if section == "Prediction":
 
         except requests.exceptions.RequestException as e:
             st.error(f"Could not connect to FastAPI backend: {e}")
-
-
-if section == 'Input widgets':
-
-    col1, col2, = st.columns(2,borders = True)
-
-    with col1:
-        st.markdown('Basic Inputs')
-
-        name  = st.text_Input(label)
